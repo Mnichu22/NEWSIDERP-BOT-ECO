@@ -1,6 +1,6 @@
 import { SlashCommandBuilder, MessageFlags } from 'discord.js';
 import { infoEmbed, successEmbed } from '../../utils/embeds.js';
-import { withErrorHandling } from '../../utils/errorHandler.js';
+import { withErrorHandling, ErrorTypes } from '../../utils/errorHandler.js'; // Dodano import ErrorTypes, aby uniknąć błędu
 import { verifyUser } from '../../services/verificationService.js';
 import { logger } from '../../utils/logger.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
@@ -8,7 +8,7 @@ import { InteractionHelper } from '../../utils/interactionHelper.js';
 export default {
     data: new SlashCommandBuilder()
         .setName('verify')
-        .setDescription('Verify yourself and gain access to the server'),
+        .setDescription('Zweryfikuj się i uzyskaj dostęp do serwera'),
 
     async execute(interaction, config, client) {
         const wrappedExecute = withErrorHandling(async () => {
@@ -22,18 +22,22 @@ export default {
             if (!result.success) {
                 if (result.alreadyVerified) {
                     return await InteractionHelper.safeReply(interaction, {
-                        embeds: [infoEmbed('Already Verified', "You are already verified.")],
+                        embeds: [infoEmbed('Już zweryfikowano', "Jesteś już zweryfikowany.")],
                         flags: MessageFlags.Ephemeral
                     });
                 }
 
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'An error occurred during verification. Please try again or contact an administrator.' });
+                // Zakładam, że w Twoim kodzie istnieje funkcja replyUserError, jeśli nie, użyj InteractionHelper.safeReply
+                return await InteractionHelper.safeReply(interaction, {
+                    embeds: [infoEmbed('Błąd', 'Podczas weryfikacji wystąpił błąd. Spróbuj ponownie lub skontaktuj się z administracją.')],
+                    flags: MessageFlags.Ephemeral
+                });
             }
 
             await InteractionHelper.safeReply(interaction, {
                 embeds: [successEmbed(
-                    "Verification Complete",
-                    `You have been verified and given the **${result.roleName}** role! Welcome to the server! 🎉`
+                    "Weryfikacja zakończona",
+                    `Zostałeś zweryfikowany i otrzymałeś rolę **${result.roleName}**! Witamy na serwerze! 🎉`
                 )],
                 flags: MessageFlags.Ephemeral
             });
