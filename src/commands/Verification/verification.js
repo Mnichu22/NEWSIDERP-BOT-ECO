@@ -12,35 +12,35 @@ import verificationDashboard from './modules/verification_dashboard.js';
 export default {
     data: new SlashCommandBuilder()
         .setName("verification")
-        .setDescription("Manage the server verification system")
+        .setDescription("Zarządzaj systemem weryfikacji na serwerze")
         .addSubcommand(subcommand =>
             subcommand
                 .setName("setup")
-                .setDescription("Set up the verification system")
+                .setDescription("Skonfiguruj system weryfikacji")
                 .addChannelOption(option =>
                     option
                         .setName("verification_channel")
-                        .setDescription("Channel where verification messages will be sent")
+                        .setDescription("Kanał, na który będą wysyłane wiadomości weryfikacyjne")
                         .addChannelTypes(ChannelType.GuildText)
                         .setRequired(true)
                 )
                 .addRoleOption(option =>
                     option
                         .setName("verified_role")
-                        .setDescription("Role to give to verified users")
+                        .setDescription("Rola nadawana zweryfikowanym użytkownikom")
                         .setRequired(true)
                 )
                 .addStringOption(option =>
                     option
                         .setName("message")
-                        .setDescription("Custom verification message")
+                        .setDescription("Własna wiadomość weryfikacyjna")
                         .setMaxLength(2000)
                         .setRequired(false)
                 )
                 .addStringOption(option =>
                     option
                         .setName("button_text")
-                        .setDescription("Text for the verification button")
+                        .setDescription("Tekst na przycisku weryfikacji")
                         .setMaxLength(80)
                         .setRequired(false)
                 )
@@ -48,18 +48,18 @@ export default {
         .addSubcommand(subcommand =>
             subcommand
                 .setName("remove")
-                .setDescription("Remove verification from a user")
+                .setDescription("Usuń weryfikację użytkownikowi")
                 .addUserOption(option =>
                     option
                         .setName("user")
-                        .setDescription("User to remove verification from")
+                        .setDescription("Użytkownik, któremu chcesz usunąć weryfikację")
                         .setRequired(true)
                 )
         )
         .addSubcommand(subcommand =>
             subcommand
                 .setName("dashboard")
-                .setDescription("Open the verification system configuration dashboard")
+                .setDescription("Otwórz panel konfiguracji systemu weryfikacji")
         ),
 
     async execute(interaction, config, client) {
@@ -71,7 +71,7 @@ export default {
                 throw createError(
                     'Missing ManageGuild permission for verification admin subcommand',
                     ErrorTypes.PERMISSION,
-                    'You need the **Manage Server** permission to use this verification subcommand.',
+                    'Potrzebujesz uprawnienia **Zarządzanie serwerem**, aby używać tej podkomendy weryfikacji.',
                     { subcommand, requiredPermission: 'ManageGuild', userId: interaction.user.id }
                 );
             }
@@ -87,7 +87,7 @@ export default {
                     throw createError(
                         `Unknown subcommand: ${subcommand}`,
                         ErrorTypes.VALIDATION,
-                        "Please select a valid subcommand.",
+                        "Proszę wybrać poprawną podkomendę.",
                         { subcommand }
                     );
             }
@@ -108,7 +108,7 @@ async function handleSetup(interaction, guild, client) {
         throw createError(
             'Bot member not found in guild cache',
             ErrorTypes.CONFIGURATION,
-            'I could not verify my permissions in this server. Please try again in a moment.',
+            'Nie mogłem zweryfikować swoich uprawnień na tym serwerze. Spróbuj ponownie za chwilę.',
             { guildId: guild.id }
         );
     }
@@ -126,7 +126,7 @@ async function handleSetup(interaction, guild, client) {
         throw createError(
             `Missing channel permissions: ${missingChannelPerms.join(', ')}`,
             ErrorTypes.PERMISSION,
-            'I need **View Channel**, **Send Messages**, and **Embed Links** in the verification channel.',
+            'Potrzebuję uprawnień **Wyświetlanie kanałów**, **Wysyłanie wiadomości** oraz **Osadzanie linków** na kanale weryfikacji.',
             { missingPermissions: missingChannelPerms, channel: verificationChannel.id }
         );
     }
@@ -135,7 +135,7 @@ async function handleSetup(interaction, guild, client) {
         throw createError(
             "Missing ManageRoles permission",
             ErrorTypes.PERMISSION,
-            "I need the 'Manage Roles' permission to give verified roles.",
+            "Potrzebuję uprawnienia **Zarządzanie rolami**, aby nadawać zweryfikowane role.",
             { missingPermission: "ManageRoles" }
         );
     }
@@ -144,7 +144,7 @@ async function handleSetup(interaction, guild, client) {
         throw createError(
             'Invalid verified role selected',
             ErrorTypes.VALIDATION,
-            'Please choose a normal assignable role (not @everyone or an integration-managed role).',
+            'Proszę wybierz normalną rolę (nie @everyone ani rolę zarządzaną przez integrację).',
             { roleId: verifiedRole.id, managed: verifiedRole.managed }
         );
     }
@@ -154,7 +154,7 @@ async function handleSetup(interaction, guild, client) {
         throw createError(
             "Role hierarchy error",
             ErrorTypes.PERMISSION,
-            "The verified role must be below my highest role in the server role hierarchy.",
+            "Wybrana rola musi być niżej w hierarchii serwera niż moja najwyższa rola.",
             { rolePosition: verifiedRole.position, botRolePosition: botRole.position }
         );
     }
@@ -168,7 +168,7 @@ async function handleSetup(interaction, guild, client) {
         throw createError(
             'Verification setup blocked by conflicting onboarding system',
             ErrorTypes.CONFIGURATION,
-            'You cannot enable the verification system while **AutoVerify** or **AutoRole** is configured. Disable those first.',
+            'Nie możesz włączyć systemu weryfikacji, gdy skonfigurowany jest **AutoVerify** lub **AutoRole**. Wyłącz je najpierw.',
             {
                 guildId: guild.id,
                 hasAutoVerifyEnabled,
@@ -182,7 +182,7 @@ async function handleSetup(interaction, guild, client) {
     await InteractionHelper.safeDefer(interaction);
 
     const verifyEmbed = createEmbed({
-        title: "Server Verification",
+        title: "Weryfikacja na serwerze",
         description: message,
         color: getColor('success')
     });
@@ -213,11 +213,11 @@ async function handleSetup(interaction, guild, client) {
 
     await InteractionHelper.safeEditReply(interaction, {
         embeds: [successEmbed(
-            'Verification System Updated',
+            'Zaktualizowano system weryfikacji',
             [
-                `Channel: ${verificationChannel}`,
-                `Verified Role: ${verifiedRole}`,
-                `Button Text: ${buttonText}`
+                `Kanał: ${verificationChannel}`,
+                `Rola: ${verifiedRole}`,
+                `Tekst przycisku: ${buttonText}`
             ].join('\n')
         )]
     });
@@ -235,7 +235,7 @@ async function handleRemove(interaction, guild, client) {
         if (!result.success) {
             if (result.notVerified) {
                 return await InteractionHelper.safeReply(interaction, {
-                    embeds: [infoEmbed('Not Verified', `${targetUser.tag} does not currently have the verified role.`)],
+                    embeds: [infoEmbed('Nie zweryfikowano', `${targetUser.tag} nie posiada obecnie roli zweryfikowanego użytkownika.`)],
                     flags: MessageFlags.Ephemeral
                 });
             }
@@ -248,7 +248,7 @@ async function handleRemove(interaction, guild, client) {
         });
 
         return await InteractionHelper.safeReply(interaction, {
-            embeds: [successEmbed('Verification Removed', `Verification removed from ${targetUser.tag}.`)]
+            embeds: [successEmbed('Usunięto weryfikację', `Weryfikacja została usunięta użytkownikowi ${targetUser.tag}.`)]
         });
 
     } catch (error) {
