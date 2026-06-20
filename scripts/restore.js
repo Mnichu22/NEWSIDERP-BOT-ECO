@@ -44,7 +44,7 @@ function ensureCommand(command) {
   });
 
   if (result.status !== 0) {
-    throw new Error(`${command} is required but was not found in PATH.`);
+    throw new Error(`Narzędzie ${command} jest wymagane, ale nie zostało znalezione w ścieżce systemowej (PATH).`);
   }
 }
 
@@ -56,7 +56,7 @@ async function resolveLatestBackup(backupDir) {
     .sort((left, right) => right.localeCompare(left));
 
   if (dumpFiles.length === 0) {
-    throw new Error(`No .dump backup files found in ${backupDir}`);
+    throw new Error(`Nie znaleziono plików kopii zapasowych (.dump) w katalogu ${backupDir}`);
   }
 
   return path.join(backupDir, dumpFiles[0]);
@@ -70,7 +70,7 @@ function runCommand(command, args) {
   });
 
   if (result.status !== 0) {
-    throw new Error(`${command} failed: ${result.stderr || result.stdout || 'Unknown error'}`);
+    throw new Error(`${command} nie powiodło się: ${result.stderr || result.stdout || 'Nieznany błąd'}`);
   }
 }
 
@@ -80,11 +80,11 @@ async function run() {
   const targetUrl = args['target-url'] || process.env.POSTGRES_RESTORE_URL || process.env.POSTGRES_URL;
 
   if (!targetUrl) {
-    throw new Error('Missing target database URL. Set POSTGRES_RESTORE_URL or POSTGRES_URL.');
+    throw new Error('Brak docelowego URL bazy danych. Ustaw POSTGRES_RESTORE_URL lub POSTGRES_URL.');
   }
 
   if (!args.confirm) {
-    throw new Error('Restore requires explicit confirmation. Re-run with --confirm.');
+    throw new Error('Przywracanie wymaga jawnego potwierdzenia. Uruchom ponownie z flagą --confirm.');
   }
 
   ensureCommand('pg_restore');
@@ -93,7 +93,7 @@ async function run() {
   const inputPath = args.input ? path.resolve(args.input) : await resolveLatestBackup(backupDir);
   const dropSchema = args['drop-schema'] === true || args['drop-schema'] === 'true';
 
-  logger.warn('Starting database restore', {
+  logger.warn('Rozpoczynanie przywracania bazy danych', {
     event: 'restore.start',
     inputPath,
     targetUrl,
@@ -121,7 +121,7 @@ async function run() {
     inputPath
   ]);
 
-  logger.info('Database restore completed', {
+  logger.info('Przywracanie bazy danych zakończone', {
     event: 'restore.completed',
     inputPath,
     targetUrl
@@ -129,7 +129,7 @@ async function run() {
 }
 
 run().catch((error) => {
-  logger.error('Restore command failed', {
+  logger.error('Polecenie przywracania nie powiodło się', {
     event: 'restore.failed',
     error: error.message
   });
