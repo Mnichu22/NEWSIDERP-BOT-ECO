@@ -6,15 +6,16 @@ import { handleInteractionError, replyUserError, ErrorTypes } from '../../utils/
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getTicketPermissionContext } from '../../utils/ticketPermissions.js';
 import { closeTicket } from '../../services/ticket.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("close")
-        .setDescription("Closes the current ticket.")
+        .setDescription("Zamyka bieżące zgłoszenie.")
         .setDMPermission(false)
         .addStringOption((option) =>
             option
-                .setName("reason")
-                .setDescription("The reason for closing the ticket.")
+                .setName("powód")
+                .setDescription("Powód zamknięcia zgłoszenia.")
                 .setRequired(false),
         ),
 
@@ -28,40 +29,40 @@ export default {
 
             const permissionContext = await getTicketPermissionContext({ client, interaction });
             if (!permissionContext.ticketData) {
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This command can only be used in a valid ticket channel.' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Ta komenda może być użyta tylko na kanale zgłoszenia.' });
             }
 
             if (!permissionContext.canCloseTicket) {
-                return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the `Manage Channels` permission, the configured `Ticket Staff Role`, or be the ticket creator to close this ticket.' });
+                return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Musisz posiadać uprawnienie `Zarządzanie kanałami`, skonfigurowaną `Rolę obsługi` lub być twórcą zgłoszenia, aby je zamknąć.' });
             }
 
             const channel = interaction.channel;
             const reason =
-                interaction.options?.getString("reason") ||
-                "Closed via command without a specific reason.";
+                interaction.options?.getString("powód") ||
+                "Zamknięto komendą bez podania powodu.";
 
             const result = await closeTicket(channel, interaction.user, reason);
             
             if (!result.success) {
-                logger.warn('Ticket close failed - not a valid ticket channel', {
+                logger.warn('Zamykanie zgłoszenia nie powiodło się - nieprawidłowy kanał', {
                     userId: interaction.user.id,
                     channelId: channel.id,
                     guildId: interaction.guildId,
                     error: result.error
                 });
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'This command can only be used in a valid ticket channel.' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || 'Ta komenda może być użyta tylko na kanale zgłoszenia.' });
             }
 
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        "Ticket Closed!",
-                        "This ticket has been closed successfully.",
+                        "Zgłoszenie zamknięte!",
+                        "Zgłoszenie zostało pomyślnie zamknięte.",
                     ),
                 ],
             });
 
-            logger.info('Ticket closed successfully', {
+            logger.info('Zgłoszenie zamknięte pomyślnie', {
                 userId: interaction.user.id,
                 userTag: interaction.user.tag,
                 channelId: channel.id,
@@ -72,7 +73,7 @@ export default {
             });
 
         } catch (error) {
-            logger.error('Error executing close command', {
+            logger.error('Błąd podczas wykonywania komendy close', {
                 error: error.message,
                 stack: error.stack,
                 userId: interaction.user.id,
