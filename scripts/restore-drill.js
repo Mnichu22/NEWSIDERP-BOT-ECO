@@ -47,14 +47,14 @@ function ensureCommand(command) {
   });
 
   if (result.status !== 0) {
-    throw new Error(`${command} is required but was not found in PATH.`);
+    throw new Error(`Narzędzie ${command} jest wymagane, ale nie zostało znalezione w ścieżce systemowej (PATH).`);
   }
 }
 
 function createTimestamp() {
   const now = new Date();
   const pad = (value) => String(value).padStart(2, '0');
-  return `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;
+  return `${now.getUTCFullYear()}${pad(now.getUTCMonth() + 1)}${pad(now.getUTCDate())}-${pad(now.getUTCHours())}${pad(now.getUTCMinutes())}${pad(now.getUTCSeconds())}`;
 }
 
 function runCommand(command, args) {
@@ -65,7 +65,7 @@ function runCommand(command, args) {
   });
 
   if (result.status !== 0) {
-    throw new Error(`${command} failed: ${result.stderr || result.stdout || 'Unknown error'}`);
+    throw new Error(`${command} nie powiodło się: ${result.stderr || result.stdout || 'Nieznany błąd'}`);
   }
 
   return result.stdout;
@@ -102,7 +102,7 @@ async function run() {
   const args = parseArgs(process.argv.slice(2));
   const sourceDatabaseUrl = process.env.POSTGRES_URL;
   if (!sourceDatabaseUrl) {
-    throw new Error('Missing required environment variable: POSTGRES_URL');
+    throw new Error('Brak wymaganej zmiennej środowiskowej: POSTGRES_URL');
   }
 
   const keepDrillDatabase = args['keep-db'] === true || args['keep-db'] === 'true';
@@ -122,7 +122,7 @@ async function run() {
 
   const maintenancePool = new Pool({ connectionString: maintenanceUrl });
 
-  logger.info('Starting restore drill', {
+  logger.info('Rozpoczynanie testu przywracania bazy danych', {
     event: 'restore_drill.start',
     drillDatabaseName
   });
@@ -165,17 +165,17 @@ async function run() {
       );
 
       if (tableCount.rows[0]?.value <= 0) {
-        throw new Error('Restore drill verification failed: no public tables restored.');
+        throw new Error('Weryfikacja testu przywracania nie powiodła się: brak przywróconych tabel publicznych.');
       }
 
       if (migrationTableCount.rows[0]?.value <= 0) {
-        throw new Error('Restore drill verification failed: schema_migrations table missing.');
+        throw new Error('Weryfikacja testu przywracania nie powiodła się: brak tabeli schema_migrations.');
       }
     } finally {
       await verifyPool.end();
     }
 
-    logger.info('Restore drill completed successfully', {
+    logger.info('Test przywracania bazy danych zakończony pomyślnie', {
       event: 'restore_drill.completed',
       drillDatabaseName,
       backupPath
@@ -200,7 +200,7 @@ async function run() {
 }
 
 run().catch((error) => {
-  logger.error('Restore drill failed', {
+  logger.error('Test przywracania bazy danych nie powiódł się', {
     event: 'restore_drill.failed',
     error: error.message
   });
