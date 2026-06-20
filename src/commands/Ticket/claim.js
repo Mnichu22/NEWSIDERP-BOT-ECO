@@ -2,14 +2,15 @@ import { getColor } from '../../config/bot.js';
 import { SlashCommandBuilder, PermissionFlagsBits, MessageFlags } from 'discord.js';
 import { successEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
-import { handleInteractionError } from '../../utils/errorHandler.js';
+import { handleInteractionError, ErrorTypes, replyUserError } from '../../utils/errorHandler.js';
 import { InteractionHelper } from '../../utils/interactionHelper.js';
 import { getTicketPermissionContext } from '../../utils/ticketPermissions.js';
 import { claimTicket } from '../../services/ticket.js';
+
 export default {
     data: new SlashCommandBuilder()
         .setName("claim")
-        .setDescription("Claims an open ticket, assigning it to you.")
+        .setDescription("Przejmij otwarte zgłoszenie, przypisując je do siebie.")
         .setDMPermission(false),
 
     async execute(interaction, guildConfig, client) {
@@ -22,36 +23,36 @@ export default {
 
             const permissionContext = await getTicketPermissionContext({ client, interaction });
             if (!permissionContext.ticketData) {
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'This command can only be used in a valid ticket channel.' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'Ta komenda może być użyta tylko na kanale zgłoszenia.' });
             }
 
             if (!permissionContext.canManageTicket) {
-                return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'You need the `Manage Channels` permission or the configured `Ticket Staff Role` to claim tickets.' });
+                return await replyUserError(interaction, { type: ErrorTypes.PERMISSION, message: 'Potrzebujesz uprawnienia `Zarządzanie kanałami` lub odpowiedniej `Roli obsługi`, aby przejmować zgłoszenia.' });
             }
 
             const channel = interaction.channel;
             const result = await claimTicket(channel, interaction.user);
             
             if (!result.success) {
-                logger.warn('Ticket claim failed - not a valid ticket channel', {
+                logger.warn('Przejmowanie zgłoszenia nie powiodło się - nieprawidłowy kanał', {
                     userId: interaction.user.id,
                     channelId: channel.id,
                     guildId: interaction.guildId,
                     error: result.error
                 });
-                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: 'result.error || "This command can only be used in a valid ticket channel."' });
+                return await replyUserError(interaction, { type: ErrorTypes.UNKNOWN, message: result.error || "Ta komenda może być użyta tylko na kanale zgłoszenia." });
             }
 
             await InteractionHelper.safeEditReply(interaction, {
                 embeds: [
                     successEmbed(
-                        "Ticket Claimed!",
-                        "You have successfully claimed this ticket.",
+                        "Zgłoszenie przejęte!",
+                        "Pomyślnie przejąłeś to zgłoszenie.",
                     ),
                 ],
             });
 
-            logger.info('Ticket claimed successfully', {
+            logger.info('Zgłoszenie przejęte pomyślnie', {
                 userId: interaction.user.id,
                 userTag: interaction.user.tag,
                 channelId: channel.id,
@@ -61,7 +62,7 @@ export default {
             });
 
         } catch (error) {
-            logger.error('Error executing claim command', {
+            logger.error('Błąd podczas wykonywania komendy claim', {
                 error: error.message,
                 stack: error.stack,
                 userId: interaction.user.id,
