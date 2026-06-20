@@ -1,12 +1,12 @@
 import { SlashCommandBuilder, version, MessageFlags } from 'discord.js';
 import { createEmbed } from '../../utils/embeds.js';
 import { logger } from '../../utils/logger.js';
-
 import { InteractionHelper } from '../../utils/interactionHelper.js';
+
 export default {
     data: new SlashCommandBuilder()
     .setName("stats")
-    .setDescription("View bot statistics"),
+    .setDescription("Wyświetla statystyki bota"),
 
   async execute(interaction) {
     try {
@@ -19,13 +19,16 @@ export default {
       );
       const nodeVersion = process.version;
 
-      const embed = createEmbed({ title: "System Statistics", description: "Real-time performance metrics." }).addFields(
-        { name: "Servers", value: `${totalGuilds}`, inline: true },
-        { name: "Users", value: `${totalMembers}`, inline: true },
-        { name: "Node.js", value: `${nodeVersion}`, inline: true },
-        { name: "Discord.js", value: `v${version}`, inline: true },
+      const embed = createEmbed({ 
+          title: "Statystyki systemu", 
+          description: "Wydajność bota w czasie rzeczywistym." 
+      }).addFields(
+        { name: "Serwery", value: `${totalGuilds}`, inline: true },
+        { name: "Użytkownicy", value: `${totalMembers}`, inline: true },
+        { name: "Wersja Node.js", value: `${nodeVersion}`, inline: true },
+        { name: "Wersja Discord.js", value: `v${version}`, inline: true },
         {
-          name: "Memory Usage",
+          name: "Zużycie pamięci",
           value: `${(process.memoryUsage().heapUsed / 1024 / 1024).toFixed(2)} MB`,
           inline: true,
         },
@@ -33,9 +36,13 @@ export default {
 
       await InteractionHelper.safeEditReply(interaction, { embeds: [embed] });
     } catch (error) {
-      logger.error('Stats command error:', error);
+      logger.error('Błąd komendy stats:', error);
       return InteractionHelper.safeEditReply(interaction, {
-        embeds: [createEmbed({ title: 'System Error', description: 'Could not fetch system statistics.', color: 'error' })],
+        embeds: [createEmbed({ 
+            title: 'Błąd systemu', 
+            description: 'Nie udało się pobrać statystyk systemu.', 
+            color: 'error' 
+        })],
         flags: MessageFlags.Ephemeral,
       });
     }
