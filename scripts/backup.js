@@ -39,7 +39,7 @@ function parseArgs(argv) {
 function assertEnv(name) {
   const value = process.env[name];
   if (!value) {
-    throw new Error(`Missing required environment variable: ${name}`);
+    throw new Error(`Brak wymaganej zmiennej środowiskowej: ${name}`);
   }
   return value;
 }
@@ -52,7 +52,7 @@ function ensureCommand(command) {
   });
 
   if (result.status !== 0) {
-    throw new Error(`${command} is required but was not found in PATH.`);
+    throw new Error(`Narzędzie ${command} jest wymagane, ale nie zostało znalezione w ścieżce systemowej (PATH).`);
   }
 }
 
@@ -85,7 +85,7 @@ async function pruneBackups(backupDir, retentionDays) {
   }
 
   if (removed > 0) {
-    logger.info(`Pruned ${removed} old backup file(s)`, {
+    logger.info(`Usunięto ${removed} starych plików kopii zapasowych`, {
       event: 'backup.prune.completed',
       removed,
       retentionDays
@@ -115,7 +115,7 @@ async function run() {
     databaseUrl
   ];
 
-  logger.info('Starting PostgreSQL backup', {
+  logger.info('Rozpoczynanie kopii zapasowej PostgreSQL', {
     event: 'backup.start',
     outputPath
   });
@@ -127,12 +127,12 @@ async function run() {
   });
 
   if (result.status !== 0) {
-    throw new Error(`pg_dump failed: ${result.stderr || result.stdout || 'Unknown error'}`);
+    throw new Error(`pg_dump nie powiódł się: ${result.stderr || result.stdout || 'Nieznany błąd'}`);
   }
 
   await pruneBackups(backupDir, retentionDays);
 
-  logger.info('PostgreSQL backup completed', {
+  logger.info('Kopia zapasowa PostgreSQL ukończona', {
     event: 'backup.completed',
     outputPath,
     retentionDays
@@ -142,7 +142,7 @@ async function run() {
 }
 
 run().catch((error) => {
-  logger.error('Backup command failed', {
+  logger.error('Polecenie kopii zapasowej nie powiodło się', {
     event: 'backup.failed',
     error: error.message
   });
